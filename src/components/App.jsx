@@ -1,4 +1,4 @@
- import React, {Component} from "react"
+ import React, {useState, useEffect} from "react"
  import { ColorRing } from 'react-loader-spinner';
 
  import  {Searchbar} from "./searchbar/Searchbar";
@@ -9,103 +9,96 @@ import Modal from "./modal/Modal";
 
 
  
+function App() {
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hits, setHits] = useState(null);
+  const [totalHits, setTotalHits] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalBigImg, setModalBigImg] = useState('');
+  const [modalAlt, setModalAlt] = useState('');
 
- class App extends Component {
-  state = {
-    query: '',
-    images: [],
-    isLoading: false,
-    error: false,
-    page: 1,
-    hits: null,
-    totalHits: null,
-    showModal: false,
-    modalData: {
-      bigImg: '',
-      alt: '',
-    },
+
+  const updateQuery = value => {
+    setQuery(value.query);
+    setPage(1);
+    setImages([]);
   };
 
-  updateQuery = value => {
-    this.setState({
-      query: value.query,
-      page: 1,
-      images: [],
-    });
-  };
-
-
-
-  componentDidUpdate(_, prevState) {
-    const prevRequest = prevState.query;
-    const nextRequest = this.state.query;
-    const prevPage = prevState.page;
-    const nextPage = this.state.page;
-  
-    if (prevRequest !== nextRequest || prevPage !== nextPage) {
-      
-        this.getData();
-      
-    }
-  }
-
-  getData = async () => {
-    
+  const getData = async () => {
     try {
-   
-      this.setState({ isLoading: true });
-      const images = await getImages(this.state.page, this.state.query);
-     
-      this.setState(prevState => ({
-        images: [...prevState.images, ...images.images],
-       
-        hits: images.total,
-        totalHits: images.totalHits,
-      }));
-
+      if (!query) {
+        return;
+      }
+      setIsLoading(true);
+      const images = await getImages(page, query);
+      setImages(state => [...state, ...images.images]);
+      setIsLoading(false);
+      setHits(images.total);
+      setTotalHits(images.totalHits);
     } catch (error) {
-      this.setState({ error: error.message });
+      setError(true);
      
-    } finally  {
-      this.setState({  isLoading: false });
+      console.log(error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (!query) {
+      return;
+    }
+    getData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, query]);
+  const loadMore = async () => {
+    setPage(state => state + 1);
+  };
+  const toggleModal = evt => {
+    setShowModal(state => !state);
+    if (evt.target.nodeName !== 'IMG') {
+      return;
+    }
+    setModalBigImg(evt.target.dataset.src);
+    setModalAlt(evt.target.getAttribute('alt'));
+  };
+  const resetModal = () => {
+    setShowModal(state => !state);
+    setModalBigImg('');
+    setModalAlt('');
+  };
+
+
+  // getData = async () => {
+    
+  //   try {
+   
+  //     this.setState({ isLoading: true });
+  //     const images = await getImages(this.state.page, this.state.query);
+     
+  //     this.setState(prevState => ({
+  //       images: [...prevState.images, ...images.images],
+       
+  //       hits: images.total,
+  //       totalHits: images.totalHits,
+  //     }));
+
+  //   } catch (error) {
+  //     this.setState({ error: error.message });
+     
+  //   } finally  {
+  //     this.setState({  isLoading: false });
+  //   }
       
     
-  };
+  // };
 
-  
+ 
 
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
-
-  toggleModal = evt => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
-    
-    this.setState({
-      modalData: {
-        bigImg: evt.target.dataset.src,
-        alt: evt.target.getAttribute('alt'),
-      },
-    });
-  };
-
-  resetModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
-    this.setState({
-      modalData: {
-        bigImg: '',
-        alt: '',
-      },
-    });
-  };
-
-   render() { 
-    const { images, isLoading, hits, totalHits, showModal, modalData } =
-      this.state;
-    const { bigImg, alt } = modalData;
 
     return (
       <div
@@ -115,7 +108,7 @@ import Modal from "./modal/Modal";
         margin: '0 auto',
       }}
     >
-      <Searchbar updateQuery={this.updateQuery} />
+      <Searchbar  updateQuery={updateQuery}  />
       {images.length === 0 && !isLoading && (
         <p>
           There`re no images yet. Please enter the search category!
@@ -123,11 +116,11 @@ import Modal from "./modal/Modal";
       )}
       {images.length !== 0 && (
         <>
-          <ImageGallery data={images} onClick={this.toggleModal} />{' '}
+          <ImageGallery data={images} error={error} onClick={toggleModal}  />{' '}
         </>
       )}
       {hits >= 12 && images.length !== totalHits && !isLoading && (
-        <LoadMore click={this.loadMore} />
+        <LoadMore  click={loadMore} />
       )}
 
       {isLoading && (
@@ -142,10 +135,10 @@ import Modal from "./modal/Modal";
           
         />
       )}
-      {showModal && <Modal src={bigImg} alt={alt} close={this.resetModal} />}
+      {showModal && <Modal src={modalBigImg} alt={modalAlt} close={resetModal} />}
     </div>
     )};
-};
+;
 
 
 export default App;
