@@ -1,14 +1,12 @@
- import React, {useState, useEffect} from "react"
- import { ColorRing } from 'react-loader-spinner';
+import React, { useState, useEffect } from 'react';
+import { ColorRing } from 'react-loader-spinner';
 
- import  {Searchbar} from "./searchbar/Searchbar";
-import { ImageGallery } from "./imageGallery/ImageGallery";
-import { LoadMore } from "./LoadMore/LoadMore";
-import { getImages } from "Api";
-import Modal from "./modal/Modal";
+import { Searchbar } from './searchbar/Searchbar';
+import { ImageGallery } from './imageGallery/ImageGallery';
+import { LoadMore } from './LoadMore/LoadMore';
+import { getImages } from 'Api';
+import Modal from './modal/Modal';
 
-
- 
 function App() {
   const [query, setQuery] = useState('');
   const [images, setImages] = useState([]);
@@ -18,9 +16,8 @@ function App() {
   const [hits, setHits] = useState(null);
   const [totalHits, setTotalHits] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalBigImg, setModalBigImg] = useState('');
-  const [modalAlt, setModalAlt] = useState('');
-
+  const [largeImageURL, setLargeImageURL] = useState('');
+  // const [modalAlt, setModalAlt] = useState('');
 
   const updateQuery = value => {
     setQuery(value.query);
@@ -28,99 +25,69 @@ function App() {
     setImages([]);
   };
 
-  const getData = async () => {
-    try {
-      if (!query) {
-        return;
-      }
-      setIsLoading(true);
-      const images = await getImages(page, query);
-      setImages(state => [...state, ...images.images]);
-      setIsLoading(false);
-      setHits(images.total);
-      setTotalHits(images.totalHits);
-    } catch (error) {
-      setError(true);
-     
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (!query) {
       return;
     }
+    const getData = async () => {
+      try {
+        setIsLoading(true);
+        const images = await getImages(page, query);
+        setImages(state => [...state, ...images.images]);
+        setHits(images.total);
+        setTotalHits(images.totalHits);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, query]);
   const loadMore = async () => {
     setPage(state => state + 1);
   };
-  const toggleModal = evt => {
-    setShowModal(state => !state);
-    if (evt.target.nodeName !== 'IMG') {
-      return;
-    }
-    setModalBigImg(evt.target.dataset.src);
-    setModalAlt(evt.target.getAttribute('alt'));
-  };
-  const resetModal = () => {
-    setShowModal(state => !state);
-    setModalBigImg('');
-    setModalAlt('');
-  };
 
-
-  // getData = async () => {
-    
-  //   try {
-   
-  //     this.setState({ isLoading: true });
-  //     const images = await getImages(this.state.page, this.state.query);
-     
-  //     this.setState(prevState => ({
-  //       images: [...prevState.images, ...images.images],
-       
-  //       hits: images.total,
-  //       totalHits: images.totalHits,
-  //     }));
-
-  //   } catch (error) {
-  //     this.setState({ error: error.message });
-     
-  //   } finally  {
-  //     this.setState({  isLoading: false });
-  //   }
-      
-    
+  // const toggleModal = evt => {
+  //   setShowModal(state => !state);
+  //   setModalBigImg(evt.target.dataset.src);
+  //   setModalAlt(evt.target.getAttribute('alt'));
   // };
 
- 
+  // const resetModal = () => {
+  //   setShowModal(state => !state);
+  //   setModalBigImg('');
+  //   setModalAlt('');
+  // };
 
+  const onOpenModal = evt => {
+    setLargeImageURL(evt.target.dataset.source);
+    toggleModal(!isLoading);
+  };
 
-    return (
-      <div
+  const toggleModal = () => {
+    setShowModal(!showModal);
+  };
+
+  return (
+    <div
       style={{
         width: '1240px',
         padding: '0 20px',
         margin: '0 auto',
       }}
     >
-      <Searchbar  updateQuery={updateQuery}  />
+      <Searchbar updateQuery={updateQuery} />
       {images.length === 0 && !isLoading && (
-        <p>
-          There`re no images yet. Please enter the search category!
-        </p>
+        <p>There`re no images yet. Please enter the search category!</p>
       )}
       {images.length !== 0 && (
         <>
-          <ImageGallery data={images} error={error} onClick={toggleModal}  />{' '}
+          <ImageGallery images={images} error={error} onClick={onOpenModal} />{' '}
         </>
       )}
       {hits >= 12 && images.length !== totalHits && !isLoading && (
-        <LoadMore  click={loadMore} />
+        <LoadMore click={loadMore} />
       )}
 
       {isLoading && (
@@ -132,13 +99,12 @@ function App() {
           wrapperStyle={{}}
           wrapperClass="blocks-wrapper"
           colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
-          
         />
       )}
-      {showModal && <Modal src={modalBigImg} alt={modalAlt} close={resetModal} />}
+      {showModal && (
+        <Modal largeImageURL={largeImageURL} onToggleModal={toggleModal} />
+      )}
     </div>
-    )};
-;
-
-
+  );
+}
 export default App;

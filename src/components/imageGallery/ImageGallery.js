@@ -4,15 +4,15 @@ import {nanoid} from 'nanoid'
 
 import { ImageGalleryItem } from 'components/imageGalleryItem/ImageGalleryItem';
 
-export const ImageGallery = ({ data, onClick }) => {
+export const ImageGallery = ({ images, onClick }) => {
     return (
       <ul className="imageGallery">
-        {data.map(img => {
+        {images.map(({ webformatURL, largeImageURL, tags }) => {
           return (
             <ImageGalleryItem
-              img={img.webformatURL}
-              alt={img.tags}
-              largeImageURL={img.largeImageURL}
+            webformatURL={webformatURL}
+              alt={tags}
+              largeImageURL={largeImageURL}
               key={nanoid(4)}
               onClick={onClick}
             />
@@ -23,6 +23,6 @@ export const ImageGallery = ({ data, onClick }) => {
   };
   
   ImageGallery.propTypes = {
-    data: PropTypes.array.isRequired,
+    images: PropTypes.array.isRequired,
     onClick: PropTypes.func.isRequired,
   };
