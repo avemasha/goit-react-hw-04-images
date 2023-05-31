@@ -48,25 +48,13 @@ function App() {
     setPage(state => state + 1);
   };
 
-  // const toggleModal = evt => {
-  //   setShowModal(state => !state);
-  //   setModalBigImg(evt.target.dataset.src);
-  //   setModalAlt(evt.target.getAttribute('alt'));
-  // };
-
-  // const resetModal = () => {
-  //   setShowModal(state => !state);
-  //   setModalBigImg('');
-  //   setModalAlt('');
-  // };
-
   const onOpenModal = evt => {
     setLargeImageURL(evt.target.dataset.source);
-    toggleModal(!isLoading);
+    toggleModal();
   };
 
   const toggleModal = () => {
-    setShowModal(!showModal);
+    setShowModal(state => !state);
   };
 
   return (
